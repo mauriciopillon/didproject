@@ -78,17 +78,17 @@ python issuer/issue_credential.py
 
 ><details>
 ><summary>Consultar/Deletar DID (Opcional)</summary>
->
+>   
 > 1. Consultar (Retorna objeto DID do ledger) 
 >
 >```
->python holder/check_did.py
+>python issuer/check_did.py
 >```
 >
 > 2. Deletar (Exclui objeto DID do ledger) 
 >
 >```
->python holder/delete_did.py
+>python issuer/delete_did.py
 >```
 >
 ></details>
@@ -113,6 +113,23 @@ python holder/create_verifiable_presentation.py
 ```
   >[!Note]
   > Por padrão, o caminho da VP criada é `holder/verifiable_presentations/`
+
+><details>
+><summary>Consultar/Deletar DID (Opcional)</summary>
+>   
+> 1. Consultar (Retorna objeto DID do ledger) 
+>
+>```
+>python holder/check_did.py
+>```
+>
+> 2. Deletar (Exclui objeto DID do ledger) 
+>
+>```
+>python holder/delete_did.py
+>```
+>
+></details>
 
 ### Verifier
 
