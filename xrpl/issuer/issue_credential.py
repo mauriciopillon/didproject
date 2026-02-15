@@ -27,7 +27,8 @@ credential_type = "Diploma"
 # Uri data
 uri_data = {
             "curso":"Engenharia",
-            "ano":"2025"
+            "ano":"2025",
+            
         }
 
 # Credential Create transaction
