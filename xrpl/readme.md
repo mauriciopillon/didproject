@@ -28,6 +28,11 @@ Implementação das roles de Holder, Issuer e Verifier no ledger XRPL.
 pip install -r requirements.txt
 ```
 
+## Definindo variáveis de ambiente
+```
+cp .env.example .env
+```
+
 ## Diagrama de fluxo das operações
 
 ```mermaid
