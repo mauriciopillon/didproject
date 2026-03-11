@@ -1,41 +1,71 @@
 import json
-from datetime import datetime, timezone
+import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from schemas.verifiable_presentation_schema import *
+from utils.credential_index_calculator import calculate_credential_index
 from utils.jws import jws
+from dotenv import load_dotenv
+load_dotenv()
 
-private_key = "ED2A4E34EDC84003058AA334B3AC701484BFE53C433C4AAAEF56EFA4CAE4C905CE"
-holder_address = "rNH4PgbHE4JCoH7PvSjFnrXv18A8qk4nJv"
-issuer_address = "rL7oLd4KDXcCfjPcCWpLF7WGATxPG7gcVp"
-credential_index = "381526BBF3B4F7A2F925A27572A2E8461FBB44F6713C342AAFDAC365572D819C"
+## CRIA DOCUMENTO JSON DA VP
 
-VP_Data = {
-    "@context":"https://www.w3.org/TR/vc-data-model-2.0/#verifiable-presentations",
+# HOLDER
+HOLDER_ADDRESS = os.getenv("HOLDER_ADDRESS")
+HOLDER_PRIVATE_KEY = os.getenv("HOLDER_PRIVATE_KEY")
 
-    "type": ["VerifiablePresentation", "XRPLDegreeVP"],
-    "holder": f"did:xrpl:2:{holder_address}",      
+# ISSUER
+ISSUER_ADDRESS = os.getenv("ISSUER_ADDRESS")
 
-    "xrplCredential":{
-        "@context": "https://xrpl.org/docs/references/protocol/ledger-data/ledger-entry-types/credential",                    
-        "type": ["XRPLCredential","XRPLDegreeCredential"],
-        "issuer":f"did:xrpl:2:{issuer_address}",
-        "xrplCredentialRef": {
-            "network_id": 2,
-            "issuer": issuer_address,            
-            "subject": holder_address,         
-            "credential_type": "Diploma",
-            "index": credential_index          
-        }  
-    },    
-}
+# Verifiable Presentation
 
-proof = {
-        "type":"Ed25519Signature",
-        "created":datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "proofPurpose":"authentication",
-        "verificationMethod":f"did:xrpl:2:{holder_address}#key-1",
-        "jws":jws(VP_Data, private_key)
-    }
+verifiable_presentation = VerifiablePresentationSchema()
 
-VP_Data["proof"] = proof
+verifiable_presentation.context = "https://www.w3.org/TR/vc-data-model-2.0/#verifiable-presentations"
+verifiable_presentation.type = ["VerifiablePresentation", "UniversityDegreeVP"]
+verifiable_presentation.holder = f"did:xrpl:2:{HOLDER_ADDRESS}"
 
-with open("holder/verifiable_presentations/diploma_vp.json","w",encoding="utf-8") as f:
-    json.dump(VP_Data, f, indent=4, ensure_ascii=False)
+xrpl_credential_type = "XRPLDegree"
+xrpl_credential_index = calculate_credential_index(HOLDER_ADDRESS, ISSUER_ADDRESS, xrpl_credential_type)
+
+xrplCredentialRef = XrplCredentialRefSchema(
+    network_id= '2',
+    issuer= ISSUER_ADDRESS,            
+    subject= HOLDER_ADDRESS,         
+    credential_type= xrpl_credential_type,
+    index= xrpl_credential_index
+)
+
+verifiable_presentation.verifiableCredential = VerifiableCredentialSchema(
+    context="https://xrpl.org/docs/references/protocol/ledger-data/ledger-entry-types/credential",
+    type=["XRPLCredential","XRPLDegreeCredential"],
+    issuer=f"did:xrpl:2:{ISSUER_ADDRESS}"
+)
+
+verifiable_presentation.verifiableCredential.credentialRef.append(xrplCredentialRef)
+
+verifiable_presentation = verifiable_presentation.model_dump(by_alias=True, exclude={"proof"})
+
+proof = ProofSchema(
+        type="Ed25519Signature",
+        created=datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat(),
+        proofPurpose="authentication",
+        verificationMethod=f"did:xrpl:2:{HOLDER_ADDRESS}#key-1",
+        jws=jws(verifiable_presentation, HOLDER_PRIVATE_KEY)
+    )
+
+proof = proof.model_dump()
+
+verifiable_presentation["proof"] = proof
+
+# DOCUMENT JSON CREATION
+document_path = "holder/documents/"
+document_name = "diploma_verifiable_presentation.json"
+
+print("Creating Verifiable Presentation...")
+try:
+    with open(document_path + document_name,"w",encoding="utf-8") as f:
+        json.dump(verifiable_presentation, f, indent=4, ensure_ascii=False)
+    print("Verifiable Presentation created.")
+except OSError as e:
+    print(f"Failed to create file: {e}")

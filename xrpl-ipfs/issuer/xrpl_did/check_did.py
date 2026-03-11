@@ -12,11 +12,11 @@ JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 print("connected!")
 
-# Holder Address
-holder_address = os.getenv("HOLDER_ADDRESS")
+# Issuer Address
+issuer_address = os.getenv("ISSUER_ADDRESS")
 
 # build the request for the account's DID
-req = LedgerEntry(ledger_index="validated", did=holder_address)
+req = LedgerEntry(ledger_index="validated", did=issuer_address)
 
 # submit request and awaiting result
 print("submitting request \n")
@@ -33,8 +33,8 @@ if "index" in result and "Account" in result["node"]:
     did_data = bytes.fromhex(result["node"]["Data"]).decode("utf-8")
     print(f'DID Data: {json.dumps(json.loads(did_data), indent=2, ensure_ascii=False, sort_keys=True)}')
     # print(f'URI: {result["node"]["URI"]}')
-    # did_uri = bytes.fromhex(result["node"]["URI"]).decode("utf-8")
-    # print(f'Did URI: {json.dumps(json.loads(did_uri), indent=2, ensure_ascii=False, sort_keys=True)}')
+    did_uri = bytes.fromhex(result["node"]["URI"]).decode("utf-8")
+    print(f'Did URI: {did_uri}')
 
 else:
     print("No DID found for this account")

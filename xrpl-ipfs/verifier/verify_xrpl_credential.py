@@ -1,13 +1,16 @@
-from utils.load_vp import load_vp
+import os
+from dotenv import load_dotenv
+from verifier.utils.load_document import load_document
 from utils.verify_xrpl_credential import verify_xrpl_credential
 from xrpl.clients import JsonRpcClient
+load_dotenv()
 
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 
-vp_path = "holder/verifiable_presentations/diploma_vp.json"
+vp_path = "holder/documents/diploma_verifiable_presentation.json"
 
-vp = load_vp(vp_path)
+vp = load_document(vp_path)
 
 try:
     credential = verify_xrpl_credential(vp=vp, client=client)

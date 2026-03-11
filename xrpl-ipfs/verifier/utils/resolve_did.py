@@ -1,7 +1,14 @@
 import base58
+import os
 import json
+import requests
 from xrpl.clients import JsonRpcClient
 from xrpl.models.requests import AccountObjects
+from dotenv import load_dotenv
+load_dotenv()
+
+IPFS_API = os.getenv("IPFS_API")
+verifier_documents_path = "verifier/documents/"
 
 def resolve_did_object_for_account(account: str, client: JsonRpcClient) -> dict:
     
@@ -15,33 +22,52 @@ def resolve_did_object_for_account(account: str, client: JsonRpcClient) -> dict:
     raise RuntimeError("Nenhum objeto DID encontrado")
 
 
-def get_holder_pubkey_from_did(holder_did: str, vm_id: str, client: JsonRpcClient) -> bytes:
+def resolve_did_document_from_ipfs(
+    cid: str,
+    file_name: str,
+    ipfs_api_url = IPFS_API,
+) -> dict:
+    try:
+        response = requests.post(f"{ipfs_api_url}/api/v0/cat", params={"arg": cid})
+        response.raise_for_status()
+
+        # salva o JSON do DID
+        with open(verifier_documents_path + file_name, "wb") as file:
+            file.write(response.content)
+
+        # retorna para leitura
+        with open(verifier_documents_path + file_name, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        return data
+
+    except requests.RequestException as e:
+        print(f"Failed to download file from IPFS: {e}")
+        raise
+    except json.JSONDecodeError as e:
+        print(f"Downloaded file is not valid JSON: {e}")
+        raise
+    except OSError as e:
+        print(f"File error: {e}")
+
+def get_public_key_from_did(did: str, vm_id: str, client: JsonRpcClient) -> bytes:
     
     # Address a partir de did:xrpl:2:<address>
-    parts = holder_did.split(":")
+    parts = did.split(":")
     if len(parts) != 4 or parts[0] != "did" or parts[1] != "xrpl":
-        raise ValueError(f"DID inválido: {holder_did}")
+        raise ValueError(f"DID inválido: {did}")
     account = parts[-1]
     
     # Buscar ledger object DID da conta
     did_obj = resolve_did_object_for_account(account, client)
 
-    # Campo DIDDocument
-    did_document_hex = did_obj["DIDDocument"]
-    did_document_str = bytes.fromhex(did_document_hex).decode("utf-8")
-    did_document = json.loads(did_document_str)
+    # Campo URI
+    did_obj_uri = bytes.fromhex(did_obj["URI"]).decode('utf-8')
+    cid = did_obj_uri.split("/")[-2]
+    file_name = did_obj_uri.split("/")[-1]
 
-    if did_document.get("id") != holder_did:
-        raise ValueError("id do DIDDocument não bate com o holder_did")
-    
-    # Campo Data
-    data_hex = did_obj.get("Data")
-    if not data_hex:
-        raise ValueError("Campo Data ausente no DID")
-    data_str = bytes.fromhex(data_hex).decode("utf-8")
-    data = json.loads(data_str)
+    did_document = resolve_did_document_from_ipfs(cid, file_name)
 
-    vm_list = data.get("verificationMethod", [])
+    vm_list = did_document.get("verificationMethod", [])
     if not vm_list:
         raise ValueError("Nenhum verificationMethod encontrado")
 
@@ -53,7 +79,7 @@ def get_holder_pubkey_from_did(holder_did: str, vm_id: str, client: JsonRpcClien
 
     for vm in vm_list:
         if vm.get("id") == suffix:
-            pkey_b58 = vm.get("pKey")[1:]
+            pkey_b58 = vm.get("publicKey")[1:]
             if not pkey_b58:
                 raise ValueError("verificationMethod encontrado, mas sem pKey")
             pubkey_bytes = base58.b58decode(pkey_b58)

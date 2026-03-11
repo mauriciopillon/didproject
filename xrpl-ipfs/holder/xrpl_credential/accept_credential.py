@@ -4,38 +4,39 @@ from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.transaction import submit_and_wait
 from xrpl.utils import str_to_hex
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # connect to the xrpl via a client
 print("Connecting to client")
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 print("connected!")
 
-# holder credentials from seed
-seed_holder = "sEdTZHgVTQrHJJNRiytkst15mXH6jQM"
-wallet_holder = Wallet.from_seed(seed=seed_holder)
-address_holder = wallet_holder.address
-# rNH4PgbHE4JCoH7PvSjFnrXv18A8qk4nJv
+# HOLDER
+HOLDER_SEED = os.getenv("HOLDER_SEED")
+HOLDER_WALLET = Wallet.from_seed(seed=HOLDER_SEED)
+HOLDER_ADRESS = HOLDER_WALLET.address
 
-seed = "sEdV8EK8uPMkCRHYcYG8x7jKxqj5mag"
-wallet_usp = Wallet.from_seed(seed=seed)
+# Issuer
+ISSUER_ADDRESS = os.getenv("ISSUER_ADDRESS")
 
-# Issuer account
-address_usp = "rL7oLd4KDXcCfjPcCWpLF7WGATxPG7gcVp"
+# XRPL Credential Type
+credential_type = "XRPLDegree"
 
-# Credential Create transaction
+# Credential Accept transaction
 credential_accept_tx = CredentialAccept(
-    account=wallet_holder.address, # alvo da credencial
-    issuer=address_usp, # issuer da credencial
-    credential_type=str_to_hex("Diploma") # tipo da credencial
+    account=HOLDER_ADRESS, # holder da credencial
+    issuer=ISSUER_ADDRESS, # issuer da credencial
+    credential_type=str_to_hex(credential_type) # tipo da credencial
 )
 
 # Sign, submit and wait for response
 credential_accept_tx_response = submit_and_wait(
     transaction=credential_accept_tx,
     client=client,
-    wallet=wallet_holder
+    wallet=HOLDER_WALLET
 )
 
 credential_accept_tx_result = credential_accept_tx_response.result

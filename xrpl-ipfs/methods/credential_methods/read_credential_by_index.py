@@ -1,7 +1,7 @@
 from xrpl.clients import JsonRpcClient
 from xrpl.models.requests import LedgerEntry
 
-credential_index = "381526BBF3B4F7A2F925A27572A2E8461FBB44F6713C342AAFDAC365572D819C"
+credential_index = "A86D024DEC8C22CC42FCB32DC504B2166CDE014E67035C3E9E8E0F3B16C3498A"
 
 client = JsonRpcClient("https://s.altnet.rippletest.net:51234")
 req = LedgerEntry(index=credential_index)

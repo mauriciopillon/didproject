@@ -3,29 +3,28 @@ from xrpl.models import DIDDelete
 from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.transaction import submit_and_wait
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # connect to the xrpl via a client
 print("Connecting to client")
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 print("connected!")
 
+# Issuer
+ISSUER_SEED = os.getenv("ISSUER_SEED")
+ISSUER_ADDRESS = os.getenv("ISSUER_ADDRESS")
+ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
 
-# input the seed that was generated from running the did_set.py
-seed = "sEdTZHgVTQrHJJNRiytkst15mXH6jQM"
-
-# restore an account that has an existing DID
-wallet = Wallet.from_seed(seed=seed)
-
-# define the account DIDDelete transaction
-did_delete_txn = DIDDelete(account=wallet.address)
+did_delete_txn = DIDDelete(account=ISSUER_ADDRESS)
 
 # sign, submit the did delete transaction and wait for result
 print("signed and submitting did delete transaction. awaiting response...")
 did_delete_response = submit_and_wait(
     transaction=did_delete_txn,
-    wallet=wallet,
+    wallet=ISSUER_WALLET,
     client=client,
 )
 

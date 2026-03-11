@@ -5,21 +5,22 @@ LSF_ACCEPTED = 0x00010000
 
 def verify_xrpl_credential(vp: dict, client: JsonRpcClient, require_accepted: bool = True) -> dict:
     
-    xcred = vp.get("xrplCredential")
-    if not xcred:
-        raise ValueError("VP não possui campo xrplCredential")
+    cred_ref = vp["verifiableCredential"].get("credentialRef")
+    if not cred_ref:
+        raise ValueError("VP não possui campo credentialRef")
 
-    ref = xcred.get("xrplCredentialRef")
-    if not ref:
-        raise ValueError("xrplCredential não possui xrplCredentialRef")
+    xrpl_cred = next((cred for cred in cred_ref if cred.get("credential_ref_type") == "XRPLCredential"), None)
 
-    network_id = ref.get("network_id")
-    issuer_account = ref.get("issuer")
-    subject_account = ref.get("subject")
-    credential_type = ref.get("credential_type")
-    index = ref.get("index")
+    if not xrpl_cred:
+        raise ValueError("credentialRef não possui XRPLCredential")
 
-    if network_id != 2:
+    network_id = xrpl_cred.get("network_id")
+    issuer_account = xrpl_cred.get("issuer")
+    subject_account = xrpl_cred.get("subject")
+    credential_type = xrpl_cred.get("credential_type")
+    index = xrpl_cred.get("index")
+
+    if not isinstance(network_id, str):
         raise ValueError(f"network_id inesperado ({network_id})")
     if not issuer_account or not subject_account or not credential_type or not index:
         raise ValueError("xrplCredentialRef incompleto")

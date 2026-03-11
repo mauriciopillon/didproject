@@ -1,6 +1,6 @@
 import base64
 import json
-from .resolve_did import get_holder_pubkey_from_did
+from .resolve_did import get_public_key_from_did
 from nacl.signing import VerifyKey
 from nacl.encoding import RawEncoder
 from xrpl.clients import JsonRpcClient
@@ -11,11 +11,11 @@ def b64url_decode(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + padding)
 
 
-def verify_vp_signature(vp: dict, client: JsonRpcClient) -> None:
+def verify_signature(document: dict, client: JsonRpcClient) -> None:
     
-    proof = vp.get("proof")
+    proof = document.get("proof")
     if not proof:
-        raise ValueError("VP não possui campo 'proof'")
+        raise ValueError("document não possui campo 'proof'")
 
     jws = proof.get("jws")
     vm_id = proof.get("verificationMethod")
@@ -35,26 +35,29 @@ def verify_vp_signature(vp: dict, client: JsonRpcClient) -> None:
     if header.get("alg") != "EdDSA":
         raise ValueError(f"Algoritmo JWS inesperado: {header.get('alg')}")
 
-    # Recriar VP sem proof e serializar
-    vp_no_proof = dict(vp)
-    vp_no_proof.pop("proof", None)
+    # Recriar document sem proof e serializar
+    document_no_proof = dict(document)
+    document_no_proof.pop("proof", None)
 
-    vp_payload = json.dumps(
-        vp_no_proof,
+    document_payload = json.dumps(
+        document_no_proof,
         separators=(",", ":"),
         sort_keys=True
     ).encode("utf-8")
 
-    expected_payload_b64 = base64.urlsafe_b64encode(vp_payload).rstrip(b"=").decode("ascii")
+    expected_payload_b64 = base64.urlsafe_b64encode(document_payload).rstrip(b"=").decode("ascii")
     if payload_b64 != expected_payload_b64:
-        raise ValueError("Payload do JWS não corresponde a VP")
+        raise ValueError("Payload do JWS não corresponde a document")
 
-    # Resolver DID do holder e obter public key
-    holder_did = vp.get("holder")
-    if not holder_did:
-        raise ValueError("VP não possui holder")
+    # Resolver DID e obter public key
+    if "VerifiableCredential" in document.get("type"):
+        did = document.get("issuer")
+    elif "VerifiablePresentation" in document.get("type"):    
+        did = document.get("holder")
+    else:
+        raise ValueError("document não possui tipo válido")
 
-    pubkey_bytes = get_holder_pubkey_from_did(holder_did, vm_id, client)
+    pubkey_bytes = get_public_key_from_did(did, vm_id, client)
 
     #  Verificar assinatura Ed25519
     signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
@@ -64,6 +67,6 @@ def verify_vp_signature(vp: dict, client: JsonRpcClient) -> None:
     try:
         vk.verify(signing_input, signature)
     except Exception as e:
-        raise ValueError(f"Assinatura da VP inválida: {e}")
+        raise ValueError(f"Assinatura inválida: {e}")
     
-    print("Assinatura da VP confirmada.")
+    print("Assinatura confirmada.")

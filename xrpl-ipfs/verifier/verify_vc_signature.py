@@ -8,11 +8,11 @@ load_dotenv()
 JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 
-vp_path = "holder/documents/diploma_verifiable_presentation.json"
+vc_path = "issuer/documents/diploma_verifiable_credential.json"
 
-vp = load_document(vp_path)
+vc = load_document(vc_path)
 
 try:
-    verify_signature(document=vp, client=client)
+    verify_signature(document=vc, client=client)
 except Exception as e:
     print(f"{e}")

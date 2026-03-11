@@ -4,7 +4,6 @@ Implementação das roles de Holder, Issuer e Verifier no ledger XRPL.
 
 # Como utilizar?
 
->[!TIP]
 >Ambiente Virtual (Opcional)
 ><details>
 ><summary> Windows: </summary>
@@ -28,12 +27,31 @@ Implementação das roles de Holder, Issuer e Verifier no ledger XRPL.
 pip install -r requirements.txt
 ```
 
+## Definindo variáveis de ambiente
+```
+cp .env.example .env
+```
+
+## Inicialização do container IPFS
+```
+docker compose -f ipfs/docker-compose.yaml up -d
+```
+
+><details>
+><summary>Testando o container (Opcional)</summary>
+>
+>```
+>curl -X POST http://127.0.0.1:5001/api/v0/version
+>```
+>
+></details>
+
 ## Diagrama de fluxo das operações
 
 ```mermaid
 flowchart LR
   subgraph ISSUER["Universidade (Issuer)"]
-    I1["Publicar DID <br/>(set_did)"] ------> I2["Emitir Credential<br/>(issue_credential)"]
+    I1["Publicar DID <br/>(set_did)"] --> I2["Emitir Credential<br/>(issue_credential)"]
   end
 
   subgraph HOLDER["Aluno (Holder)"]
@@ -42,7 +60,7 @@ flowchart LR
   end
 
   subgraph VERIFIER["Verificador (Verifier)"]
-    V1["Receber VP"] --> V2["Validar assinatura (verify_vp_signature) "]
+    V1["Receber VP"] --> V2["Validar assinatura<br/>(verify_vp_signature)"]
     V2 --> V3["Validar Credential no XRPL<br/>(verify_xrpl_credential)"]
   end
 
@@ -52,10 +70,23 @@ flowchart LR
     L3[("Credential")]
   end
 
+  subgraph IPFS["IPFS"]
+    P1[("issuer_did.json")]
+    P2[("diploma_vc.json")]
+    P3[("holder_did.json")]
+  end
+
   I1 -.-> L1
   I2 -.-> L3
   H1 -.-> L2
   H2 -.-> L3
+
+  I1 -->|upload issuer DID| P1
+  I2 -->|upload VC| P2
+  H1 -->|upload holder DID| P3
+
+  P1 -->|download issuer_did| V2
+  P3 -->|download holder_did| V2
 
   H3 --> V1
   V2 -.-> L2

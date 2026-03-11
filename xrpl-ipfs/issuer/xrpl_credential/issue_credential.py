@@ -5,36 +5,36 @@ from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.transaction import submit_and_wait
 from xrpl.utils import str_to_hex
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # connect to the xrpl via a client
 print("Connecting to client")
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 print("connected!")
 
-# Issuer credentials from seed
-seed_usp = "sEdV8EK8uPMkCRHYcYG8x7jKxqj5mag"
-wallet_usp = Wallet.from_seed(seed=seed_usp)
-address_usp = wallet_usp.address
+# Issuer
+ISSUER_SEED = os.getenv("ISSUER_SEED")
+ISSUER_ADDRESS = os.getenv("ISSUER_ADDRESS")
+ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
 
-# User account
-address_user = "rNH4PgbHE4JCoH7PvSjFnrXv18A8qk4nJv"
+# Holder
+HOLDER_ADDRESS = os.getenv("HOLDER_ADDRESS")
 
-# Credential type
-credential_type = "Diploma"
+# Credential JSON Document Fields
+cid = "QmURDfSkJ8zRr9RvgPiHnQyjQmzAgaqvLCQpPXpoTFTMxr"
+file_name = "diploma_verifiable_credential.json"
 
-# Uri data
-uri_data = {
-            "curso":"Engenharia",
-            "ano":"2025",
-            
-        }
+# Credential XPRL Fields
+credential_type = "XRPLDegree"
+uri_data = "ipfs://" + cid + "/" + file_name
 
 # Credential Create transaction
 credential_create_tx = CredentialCreate(
-    account=wallet_usp.address, # issuer da credencial
-    subject=address_user, # alvo da credencial
+    account=ISSUER_ADDRESS, # issuer da credencial
+    subject=HOLDER_ADDRESS, # holder da credencial
     credential_type=str_to_hex(credential_type), # tipo da credencial
     uri=str_to_hex(json.dumps(uri_data, ensure_ascii=False, separators=(",", ":")))   
 )
@@ -43,7 +43,7 @@ credential_create_tx = CredentialCreate(
 credential_create_tx_response = submit_and_wait(
     transaction=credential_create_tx,
     client=client,
-    wallet=wallet_usp
+    wallet=ISSUER_WALLET
 )
 
 credential_create_tx_result = credential_create_tx_response.result

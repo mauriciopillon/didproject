@@ -9,25 +9,25 @@ load_dotenv()
 
 # connect to the xrpl via a client
 print("Connecting to client")
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+JSON_RPC_URL = os.getenv("JSON_RPC_URL")
 client = JsonRpcClient(JSON_RPC_URL)
 print("connected!")
 
-# Credential type for deletion
-credential_type = "Diploma"
-
 # Holder Wallet
-holder_seed = os.getenv("HOLDER_ADDRESS")
-holder_wallet = Wallet.from_seed(seed=holder_seed)
-holder_address = holder_wallet.address
+HOLDER_SEED = os.getenv("HOLDER_SEED")
+HOLDER_WALLET = Wallet.from_seed(seed=HOLDER_SEED)
+HOLDER_ADDRESS = HOLDER_WALLET.address
 
 # Issuer Address
-issuer_address = os.getenv("ISSUER_ADDRESS")
+ISSUER_ADDRESS = os.getenv("ISSUER_ADDRESS")
+
+# Credential type for deletion
+credential_type = "XRPLDegree"
 
 # Credential Delete transaction | Holder ou Issuer podem deletar
 credential_delete_tx = CredentialDelete(
-    account=holder_address, # Alvo da credencial
-    issuer=issuer_address, # Issuer da credencial
+    account=HOLDER_ADDRESS, # Holder da credencial
+    issuer=ISSUER_ADDRESS, # Issuer da credencial
     credential_type=str_to_hex(credential_type) # tipo da credencial
 )
 
@@ -35,7 +35,7 @@ credential_delete_tx = CredentialDelete(
 credential_delete_tx_response = submit_and_wait(
     transaction=credential_delete_tx,
     client=client,
-    wallet=holder_wallet
+    wallet=HOLDER_WALLET
 )
 
 credential_delete_tx_result = credential_delete_tx_response.result
