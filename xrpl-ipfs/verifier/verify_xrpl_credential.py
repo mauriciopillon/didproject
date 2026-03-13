@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from verifier.utils.load_document import load_document
+from utils.load_document import load_document
 from utils.verify_xrpl_credential import verify_xrpl_credential
 from xrpl.clients import JsonRpcClient
 load_dotenv()

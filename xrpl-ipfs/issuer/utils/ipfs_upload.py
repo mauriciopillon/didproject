@@ -7,15 +7,29 @@ import os
 load_dotenv()
 
 def upload_to_ipfs(file_path: str, file_name: str):
+    """
+    Uploads file to IPFS and prints the corresponding CID and File Name.
+    Also updates local and IPFS logfiles with both values, file size and timestamp.
+
+    :param str file_path: path to the file to be uploaded
+    :param str file_name: name of the file to be uploaded
+
+    :return: none
+
+    """
     IPFS_API = os.getenv("IPFS_API")
 
     # File to be uploaded
     file_path = file_path
     file_name = file_name
 
-    # File to record upload logs/CIDs
-    log_path = "ipfs/logs/"
-    log_file = "logfile.jsonl"
+    # IPFS logfile location
+    ipfs_logfile_path = "ipfs/logs/"
+    ipfs_logfile_file = "logfile.jsonl"
+
+    # Local logfile location
+    local_logfile_path = "issuer/logs/"
+    local_logfile_file = "logfile.jsonl"
 
     print("Uploading to IPFS...")
     # Upload (add) com pin=true 
@@ -36,7 +50,7 @@ def upload_to_ipfs(file_path: str, file_name: str):
     data_size = data["Size"]
     data_added_at = datetime.now(ZoneInfo("America/Sao_Paulo")).isoformat()
 
-    # Saving data content to logfile
+    # Saving data content to local/ipfs logfiles
     log_file_content = {
         "name": data_name,
         "CID": data_CID,
@@ -44,10 +58,13 @@ def upload_to_ipfs(file_path: str, file_name: str):
         "added_at": data_added_at
     }
 
-    print("Updating logfile...")
-    with open(log_path + log_file, "a", encoding="utf-8") as out:
+    print("Updating IPFS logfile...")
+    with open(ipfs_logfile_path + ipfs_logfile_file, "a", encoding="utf-8") as out:
         out.write(json.dumps(log_file_content, ensure_ascii=False) + "\n")
 
+    print("Updating local logfile...")
+    with open(local_logfile_path + local_logfile_file, "a", encoding="utf-8") as out:
+        out.write(json.dumps(log_file_content, ensure_ascii=False) + "\n")
 
     print("Name:", data_name)
     print("CID:", data_CID)

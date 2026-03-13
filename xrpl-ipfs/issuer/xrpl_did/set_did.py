@@ -1,5 +1,6 @@
 # This allows you to create or update a DID
 import json
+from utils.get_cid_from_logfile import get_cid_from_logfile
 from xrpl.models import DIDSet
 from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
@@ -21,8 +22,8 @@ ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
 ISSUER_ADDRESS = ISSUER_WALLET.address
 
 # DID JSON Document
-cid = "QmU6ua7J66nUqvLyCN2iERLyNCs9M2C8hZwS9AhFo3fQuW"
 file_name = "issuer_did.json"
+cid = get_cid_from_logfile(file_name)
 
 # DID XRPL Object Fields 
 document = {    

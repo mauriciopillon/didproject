@@ -5,6 +5,7 @@ from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.transaction import submit_and_wait
 from xrpl.utils import str_to_hex
+from utils.get_cid_from_logfile import get_cid_from_logfile
 from dotenv import load_dotenv
 import os
 load_dotenv()
@@ -21,8 +22,8 @@ HOLDER_WALLET = Wallet.from_seed(seed=HOLDER_SEED)
 HOLDER_ADDRESS = HOLDER_WALLET.address
 
 # DID JSON Document
-cid = 'QmeTL2AkGopZhzqy3qQYzJVSTtNTy7PXWs8UJtvVMeKpWV'
 file_name = "holder_did.json"
+cid = get_cid_from_logfile(file_name)
 
 # DID XRPL Object Fields
 document = {

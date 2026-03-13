@@ -51,17 +51,19 @@ docker compose -f ipfs/docker-compose.yaml up -d
 ```mermaid
 flowchart LR
   subgraph ISSUER["Universidade (Issuer)"]
-    I1["Publicar DID <br/>(set_did)"] --> I2["Emitir Credential<br/>(issue_credential)"]
+    I1["Create DID Document <br/>"] --> I2["Create Verifiable Credential<br/>"]
+    
   end
 
   subgraph HOLDER["Aluno (Holder)"]
-    H1["Publicar DID <br/>(set_did)"] --> H2["Aceitar Credential<br/>(accept_credential)"]
-    H2 --> H3["Montar + Assinar VP<br/>(create_verifiable_presentation (JWS Ed25519))"]
+    H1["Create DID Document <br/>"] --> H2["Accept XRPL Credential<br/>"]
+    H2 --> H3["Create Verifiable Presentation<br/>"]
   end
 
   subgraph VERIFIER["Verificador (Verifier)"]
-    V1["Receber VP"] --> V2["Validar assinatura<br/>(verify_vp_signature)"]
-    V2 --> V3["Validar Credential no XRPL<br/>(verify_xrpl_credential)"]
+    V1["Load Verifiable Presentation"] --> V2["Verify EdDSA Signature<br/>"]
+    V2 --> V3["Verify XRPL Credential<br/>"]
+    V4["Load Verifiable Credential<br/>(OPTIONAL)"] --> V2["Verify EdDSA Signature<br/>"]
   end
 
   subgraph XRPL["XRPL Ledger"]
@@ -76,16 +78,16 @@ flowchart LR
     P3[("holder_did.json")]
   end
 
-  I1 -.-> L1
-  I2 -.-> L3
+  I1 -->|Set DID to XRPL| L1
   H1 -.-> L2
   H2 -.-> L3
+  I2 -.-> V4
 
-  I1 -->|upload issuer DID| P1
-  I2 -->|upload VC| P2
-  H1 -->|upload holder DID| P3
+  I1 -->|upload issuer DID to IPFS| P1
+  I2 -->|upload Verifiable Credential to IPFS| P2
+  H1 -->|upload holder DID to IPFS| P3
 
-  P1 -->|download issuer_did| V2
+  P1 -->|"download issuer_did <br/> (optional)"| V2
   P3 -->|download holder_did| V2
 
   H3 --> V1
@@ -94,17 +96,72 @@ flowchart LR
 
 ```
 
+## Diagrama de Sequência das operações
+```mermaid
+sequenceDiagram
+  participant Issuer as Universidade (Issuer)
+  participant Holder as Aluno (Holder)
+  participant Verifier as Verificador (Verifier)
+  participant XRPL as XRPL Ledger
+  participant IPFS as IPFS
+
+  Issuer->>Issuer: Create DID Document
+  Issuer->>IPFS: Upload issuer_did.json
+  Issuer->>XRPL: Set DID to XRPL
+
+  Issuer->>Issuer: Create Verifiable Credential
+  Issuer->>IPFS: Upload diploma_vc.json
+
+  Holder->>Holder: Create DID Document
+  Holder->>IPFS: Upload holder_did.json
+  Holder->>XRPL: Set DID to XRPL
+
+  Holder->>XRPL: Accept XRPL Credential
+  XRPL-->>Holder: Credential accepted
+
+  Holder->>Holder: Create Verifiable Presentation
+  Holder->>Verifier: Load Verifiable Presentation
+
+  Verifier->>XRPL: check holder XRPL DID for IPFS CID
+  XRPL-->>Verifier: IPFS CID for holder DID 
+  Verifier->>IPFS: Download holder_did.json
+  IPFS-->>Verifier: holder DID
+
+  Verifier->>Verifier: Verify EdDSA Signature
+
+  Verifier->>XRPL: Verify XRPL Credential
+  XRPL-->>Verifier: Credential validation result
+
+  opt Optional Verification
+      Issuer->>Verifier: Load Verifiable Credential
+      Verifier->>XRPL: check issuer XRPL DID for IPFS CID
+      XRPL-->>Verifier: IPFS CID for issuer DID
+      Verifier->>IPFS: Download issuer_did.json
+      IPFS-->>Verifier: issuer DID
+      Verifier->>Verifier: Verify EdDSA Signature
+
+  end
+
+
+```
+
 ## Execução das roles
 
 ### Issuer (Universidade)
 
-1. Publicar DID
+#### 1. Criar documento DID
 ```
-python issuer/set_did.py
+python issuer/create_did_document.py
 ```
-2. Emitir credencial
+Retorna CID do documento, por exemplo:  ```CID: QmU6ua7J66nUqvLyCN2iERLyNCs9M2C8hZwS9AhFo3fQuW```
+#### 2. Criar objeto DID no XRPL ledger 
+No arquivo `issuer/xrpl_did/set_did.py`
 ```
-python issuer/issue_credential.py
+
+```
+#### 3. Criar verifiable credential
+```
+python issuer/create_verifiable_credential.py
 ```
 
 ><details>
