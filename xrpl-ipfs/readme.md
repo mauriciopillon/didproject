@@ -150,19 +150,32 @@ sequenceDiagram
 ### Issuer (Universidade)
 
 #### 1. Criar documento DID
+Cria documento `issuer_did.json` em `issuer/documents/` e faz upload para IPFS.
 ```
 python issuer/create_did_document.py
 ```
-Retorna CID do documento, por exemplo:  ```CID: QmU6ua7J66nUqvLyCN2iERLyNCs9M2C8hZwS9AhFo3fQuW```
+
 #### 2. Criar objeto DID no XRPL ledger 
-No arquivo `issuer/xrpl_did/set_did.py`
-```
 
 ```
-#### 3. Criar verifiable credential
+python issuer/xrpl_did/set_did.py
+```
+
+#### 3. Criar Verifiable Credential (VC)
+Cria documento `diploma_verifiable_credential.json` em `issuer/documents/` e faz upload para IPFS.
+
 ```
 python issuer/create_verifiable_credential.py
 ```
+
+#### 4. Criar objeto Credential no XRPL ledger
+
+```
+python issuer/xrpl_credential/issue_credential.py
+```
+
+>[!Note]
+>1. e 3. retornam CID do documento, por exemplo ```CID: QmU6ua7J66nUqvLyCN2iERLyNCs9M2C8hZwS9AhFo3fQuW``` e salvam no arquivo de logs em ```issuer/logs/logfile.jsonl``` 
 
 ><details>
 ><summary>Consultar/Deletar DID (Opcional)</summary>
@@ -170,37 +183,45 @@ python issuer/create_verifiable_credential.py
 > 1. Consultar (Retorna objeto DID do ledger) 
 >
 >```
->python issuer/check_did.py
+>python issuer/xrpl_did/check_did.py
 >```
 >
 > 2. Deletar (Exclui objeto DID do ledger) 
 >
 >```
->python issuer/delete_did.py
+>python issuer/xrpl_did/delete_did.py
 >```
 >
 ></details>
 
 ### Holder (Aluno)
 
-3. Publicar DID
+#### 5. Criar documento DID
+Cria documento `holder_did.json` em `holder/documents/` e faz upload para IPFS
 ```
-python holder/set_did.py
+python holder/create_did_document.py
 ```
-4. Aceitar credencial
+
+#### 6. Criar objeto DID no XRPL ledger
+```
+python holder/xrpl_did/set_did.py
+```
+
+#### 7. Aceitar credencial XRPL
+
   >[!Warning]
   > Credencial deve ter sido emitida pelo Issuer antes de poder ser aceita.
 ```
-python holder/accept_credential.py
+python holder/xrpl_credential/accept_credential.py
 ```
-5. Criar Verifiable Presentation (VP)
+
+#### 8. Criar Verifiable Presentation (VP)
+Cria documento `diploma_verifiable_presentation.json` em `holder/documents/`
   >[!Warning]
   > Credencial deve ter sido emitida pelo Issuer antes de poder ser referenciada na VP.
 ```
 python holder/create_verifiable_presentation.py
 ```
-  >[!Note]
-  > Por padrão, o caminho da VP criada é `holder/verifiable_presentations/`
 
 ><details>
 ><summary>Consultar/Deletar DID (Opcional)</summary>
@@ -208,29 +229,38 @@ python holder/create_verifiable_presentation.py
 > 1. Consultar (Retorna objeto DID do ledger) 
 >
 >```
->python holder/check_did.py
+>python holder/xrpl_did/check_did.py
 >```
 >
 > 2. Deletar (Exclui objeto DID do ledger) 
 >
 >```
->python holder/delete_did.py
+>python holder/xrpl_did/delete_did.py
 >```
 >
 ></details>
 
 ### Verifier
 
-6. Verificar a validade da assinatura EdDSA da VP
+#### 9. Verificar a validade da assinatura EdDSA da VP
   >[!Warning]
   > VP deve ter sido criada pelo Holder (5) para ser verificada.
    ```
    python verifier/verify_vp_signature.py
    ```
-7. Verificar a validade da credencial XRPL
+#### 10. Verificar a validade da credencial XRPL
   >[!Warning]
-  > Credencial deve ter sido emitida pelo Issuer (2) e aceita pelo Holder (4).
+  > Credencial deve ter sido emitida pelo Issuer e aceita pelo Holder.
    ```
    python verifier/verify_xrpl_credential.py
    ```
 
+><details>
+><summary>Verificar a validade da assinatura EdDSA da VC (Opcional)</summary>
+>    
+>
+>```
+>python verifier/verify_vc_signature.py
+>```
+>
+></details>
