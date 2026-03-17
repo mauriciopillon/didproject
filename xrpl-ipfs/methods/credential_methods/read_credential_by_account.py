@@ -3,7 +3,7 @@ from xrpl.models.requests import AccountObjects, AccountObjectType
 
 lsfAccepted = 0x00010000
 
-subject = "rL7oLd4KDXcCfjPcCWpLF7WGATxPG7gcVp"
+account = "rL7oLd4KDXcCfjPcCWpLF7WGATxPG7gcVp"
 
 # connect to the xrpl via a client
 print("Connecting to client")
@@ -63,7 +63,7 @@ def look_up_credentials(client:JsonRpcClient,
             has_more_pages = False
     return credentials
 
-credentials = look_up_credentials(client=client, subject=subject)
+credentials = look_up_credentials(client=client, issuer=account)
 
 for i, credentials in enumerate(credentials, start=1):
     print(f"--- Credential #{i} ---")

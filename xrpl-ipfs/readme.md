@@ -46,6 +46,13 @@ docker compose -f ipfs/docker-compose.yaml up -d
 >
 ></details>
 
+## Inicializando a Interface Visual
+Acessível em `127.0.0.1:8080` ou `localhost:8080`. A porta pode ser alterada pela variável `GUI_PORT` no arquivo `.env`
+```
+python gui/ui.py
+```
+
+
 ## Diagrama de fluxo das operações
 
 ```mermaid
@@ -111,6 +118,7 @@ sequenceDiagram
 
   Issuer->>Issuer: Create Verifiable Credential
   Issuer->>IPFS: Upload diploma_vc.json
+  Issuer->>XRPL: Issue Credential to XRPL
 
   Holder->>Holder: Create DID Document
   Holder->>IPFS: Upload holder_did.json
