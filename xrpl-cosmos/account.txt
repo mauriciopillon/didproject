@@ -1,0 +1,3 @@
+Private key: 6f61de78998e16090778b91691637e3a9a0ccb7cb5cfe17f49a22decf57702a6
+EVM address: 0x0d092a4c0AD652beB8827f4934207ba8F9983f81
+Cosmos address: ethm1p5yj5nq26eftawyz0aynggrm4rues0up244xra
