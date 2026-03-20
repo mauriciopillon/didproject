@@ -24,7 +24,7 @@ ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
 HOLDER_ADDRESS = os.getenv("HOLDER_ADDRESS")
 
 # Credential JSON Document Fields
-cid = "QmURDfSkJ8zRr9RvgPiHnQyjQmzAgaqvLCQpPXpoTFTMxr"
+cid = "QmT7Jdkhvye1SsxNEmiKvKfTRHKM1AYfsDT2p8kHNB5Ekv"
 file_name = "diploma_verifiable_credential.json"
 
 # Credential XPRL Fields

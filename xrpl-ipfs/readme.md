@@ -116,13 +116,13 @@ sequenceDiagram
   Issuer->>IPFS: Upload issuer_did.json
   Issuer->>XRPL: Set DID to XRPL
 
-  Issuer->>Issuer: Create Verifiable Credential
-  Issuer->>IPFS: Upload diploma_vc.json
-  Issuer->>XRPL: Issue Credential to XRPL
-
   Holder->>Holder: Create DID Document
   Holder->>IPFS: Upload holder_did.json
   Holder->>XRPL: Set DID to XRPL
+
+  Issuer->>Issuer: Create Verifiable Credential
+  Issuer->>IPFS: Upload diploma_vc.json
+  Issuer->>XRPL: Issue Credential to XRPL
 
   Holder->>XRPL: Accept XRPL Credential
   XRPL-->>Holder: Credential accepted

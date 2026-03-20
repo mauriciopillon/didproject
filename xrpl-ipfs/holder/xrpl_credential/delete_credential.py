@@ -26,7 +26,7 @@ credential_type = "XRPLDegree"
 
 # Credential Delete transaction | Holder ou Issuer podem deletar
 credential_delete_tx = CredentialDelete(
-    account=HOLDER_ADDRESS, # Holder da credencial
+    account=ISSUER_ADDRESS, # Conta que envia a transaction
     issuer=ISSUER_ADDRESS, # Issuer da credencial
     credential_type=str_to_hex(credential_type) # tipo da credencial
 )

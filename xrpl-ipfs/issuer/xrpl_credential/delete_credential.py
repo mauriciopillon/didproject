@@ -15,7 +15,7 @@ print("connected!")
 
 # Issuer
 ISSUER_SEED = os.getenv("ISSUER_SEED")
-ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
+ISSUER_WALLET = Wallet.from_seed(seed=ISSUER_SEED)
 ISSUER_ADDRESS = ISSUER_WALLET.address
 
 # Holder
@@ -26,7 +26,7 @@ credential_type = "XRPLDegree"
 
 # Credential Delete transaction | Holder ou Issuer podem deletar
 credential_delete_tx = CredentialDelete(
-    account=HOLDER_ADDRESS, # holder da credencial
+    account=HOLDER_ADDRESS, # Conta que envia a transaction
     issuer=ISSUER_ADDRESS, # issuer da credencial
     credential_type=str_to_hex(credential_type) # tipo da credencial
 )
