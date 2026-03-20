@@ -5,6 +5,7 @@ from xrpl.clients import JsonRpcClient
 from xrpl.wallet import Wallet
 from xrpl.transaction import submit_and_wait
 from xrpl.utils import str_to_hex
+from utils.get_cid_from_logfile import get_cid_from_logfile
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -24,19 +25,19 @@ ISSUER_WALLET = Wallet.from_seed(ISSUER_SEED)
 HOLDER_ADDRESS = os.getenv("HOLDER_ADDRESS")
 
 # Credential JSON Document Fields
-cid = "QmT7Jdkhvye1SsxNEmiKvKfTRHKM1AYfsDT2p8kHNB5Ekv"
 file_name = "diploma_verifiable_credential.json"
+cid = get_cid_from_logfile(file_name=file_name)
 
 # Credential XPRL Fields
 credential_type = "XRPLDegree"
-uri_data = "ipfs://" + cid + "/" + file_name
+uri = "ipfs://" + cid + "/" + file_name
 
 # Credential Create transaction
 credential_create_tx = CredentialCreate(
     account=ISSUER_ADDRESS, # issuer da credencial
     subject=HOLDER_ADDRESS, # holder da credencial
     credential_type=str_to_hex(credential_type), # tipo da credencial
-    uri=str_to_hex(json.dumps(uri_data, ensure_ascii=False, separators=(",", ":")))   
+    uri=str_to_hex(json.dumps(uri, ensure_ascii=False, separators=(",", ":")))   
 )
 
 # Sign, submit and wait for response
