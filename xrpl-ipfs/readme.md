@@ -106,19 +106,20 @@ flowchart LR
 ## Diagrama de Sequência das operações
 ```mermaid
 sequenceDiagram
+  autonumber
   participant Issuer as Universidade (Issuer)
   participant Holder as Aluno (Holder)
   participant Verifier as Verificador (Verifier)
   participant XRPL as XRPL Ledger
   participant IPFS as IPFS
 
-  Issuer->>Issuer: Create DID Document
+  Issuer->>Issuer: Define local DID Data
   Issuer->>IPFS: Upload issuer_did.json
-  Issuer->>XRPL: Set DID to XRPL
+  Issuer->>XRPL: Create XRPL DID Document
 
-  Holder->>Holder: Create DID Document
+  Holder->>Holder: Define local DID Data
   Holder->>IPFS: Upload holder_did.json
-  Holder->>XRPL: Set DID to XRPL
+  Holder->>XRPL: Create XRPL DID Document
 
   Issuer->>Issuer: Create Verifiable Credential
   Issuer->>IPFS: Upload diploma_vc.json
@@ -157,16 +158,16 @@ sequenceDiagram
 
 ### Issuer (Universidade)
 
-#### 1. Criar documento DID
-Cria documento `issuer_did.json` em `issuer/documents/` e faz upload para IPFS.
+#### 1. Definir documento DID local
+Define dados locais do DID `issuer_did.json` em `issuer/documents/` e faz upload para IPFS.
 ```
-python issuer/create_did_document.py
+python issuer/define_local_did_data.py
 ```
 
-#### 2. Criar objeto DID no XRPL ledger 
+#### 2. Criar documento DID no XRPL ledger 
 
 ```
-python issuer/xrpl_did/set_did.py
+python issuer/xrpl_did/create_did_document.py
 ```
 
 #### 3. Criar Verifiable Credential (VC)
@@ -204,15 +205,15 @@ python issuer/xrpl_credential/issue_credential.py
 
 ### Holder (Aluno)
 
-#### 5. Criar documento DID
-Cria documento `holder_did.json` em `holder/documents/` e faz upload para IPFS
+#### 5. Definir documento DID local
+Define dados locais do DID `holder_did.json` em `holder/documents/` e faz upload para IPFS
 ```
-python holder/create_did_document.py
+python holder/define_local_did_data.py
 ```
 
-#### 6. Criar objeto DID no XRPL ledger
+#### 6. Criar documento DID no XRPL ledger
 ```
-python holder/xrpl_did/set_did.py
+python holder/xrpl_did/create_did_document.py
 ```
 
 #### 7. Aceitar credencial XRPL

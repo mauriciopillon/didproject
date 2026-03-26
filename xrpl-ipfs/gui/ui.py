@@ -149,8 +149,8 @@ def build_ui() -> None:
             "Issuer",
             "badge",
             main_actions=[
-                ("Create DID Document", "issuer/create_did_document.py"),
-                ("Set DID to XRPL", "issuer/xrpl_did/set_did.py"),
+                ("Define Local DID Data", "issuer/define_local_did_data.py"),
+                ("Create DID Document", "issuer/xrpl_did/create_did_document.py"),
                 ("Create Verifiable Credential", "issuer/create_verifiable_credential.py"),
                 ("Issue Credential to XRPL","issuer/xrpl_credential/issue_credential.py"),
             ],
@@ -166,8 +166,8 @@ def build_ui() -> None:
             "Holder",
             "person",
             main_actions=[
-                ("Create DID Document", "holder/create_did_document.py"),
-                ("Set DID to XRPL", "holder/xrpl_did/set_did.py"),
+                ("Define Local DID Data", "holder/define_local_did_data.py"),
+                ("Create DID Document", "holder/xrpl_did/create_did_document"),
                 ("Accept XRPL Credential", "holder/xrpl_credential/accept_credential.py"),
                 ("Create Verifiable Presentation","holder/create_verifiable_presentation.py"),
             ],
