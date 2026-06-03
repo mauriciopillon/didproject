@@ -1,0 +1,4 @@
+xrpl-py==4.5.0
+web3==7.15.0
+python-dotenv==1.2.2
+eth-abi==5.2.0

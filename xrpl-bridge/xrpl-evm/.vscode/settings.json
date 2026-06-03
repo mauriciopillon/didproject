@@ -1,0 +1,4 @@
+{
+  "solidity.packageDefaultDependenciesDirectory": "evm-sidechain/node_modules",
+  "solidity.packageDefaultDependenciesContractsDirectory": ""
+}

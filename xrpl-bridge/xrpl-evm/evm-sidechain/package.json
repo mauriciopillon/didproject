@@ -1,0 +1,20 @@
+{
+  "name": "evm-sidechain",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@axelar-network/axelar-gmp-sdk-solidity": "^6.0.6",
+    "dotenv": "^17.4.2",
+    "ethers": "^5.8.0"
+  },
+  "devDependencies": {
+    "hardhat": "^3.4.0"
+  }
+}

@@ -1,0 +1,26 @@
+services:
+  xrplevm-a:
+    build: .
+    image: xrplevm-local:dev
+    container_name: xrplevm-a
+    command: ["bash", "local-node-a.sh"]
+    ports:
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+      - "8545:8545"
+      - "8546:8546"
+
+  xrplevm-b:
+    build: .
+    image: xrplevm-local:dev
+    container_name: xrplevm-b
+    command: ["bash", "local-node-b.sh"]
+    depends_on:
+      - xrplevm-a
+    ports:
+      - "36657:26657"
+      - "2317:1317"
+      - "19090:9090"
+      - "9545:8545"
+      - "9546:8546"
