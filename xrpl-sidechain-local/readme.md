@@ -133,6 +133,7 @@ python tests/check_balance_cosmos.py
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant UserA as Usuário Chain A
     participant ChainA as XRPL Sidechain A
     participant Hermes as Relayer Hermes
