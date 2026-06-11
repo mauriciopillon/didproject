@@ -84,6 +84,7 @@ def transfer_user_to_app():
         "Code:":response["result"]["code"],
         "TxHash:":response["result"]["hash"]
     }
+    
     if(response["result"]["code"] == 0):
         with open("cosmos-app/logfile.jsonl", "a", encoding="utf-8") as out:
             out.write(json.dumps(output, ensure_ascii=False) + "\n")

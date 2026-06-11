@@ -3,7 +3,9 @@ services:
     build: .
     image: xrplevm-local:dev
     container_name: xrplevm-a
-    command: ["bash", "local-node-a.sh"]
+    command: ["bash", "/usr/local/bin/start-persistent-a.sh"]
+    volumes:
+      - xrplevm-a-data:/app/.exrpd
     ports:
       - "26657:26657"
       - "1317:1317"
@@ -15,12 +17,27 @@ services:
     build: .
     image: xrplevm-local:dev
     container_name: xrplevm-b
-    command: ["bash", "local-node-b.sh"]
-    depends_on:
-      - xrplevm-a
+    command: ["bash", "/usr/local/bin/start-persistent-b.sh"]
+    volumes:
+      - xrplevm-b-data:/app/.exrpd
     ports:
       - "36657:26657"
       - "2317:1317"
       - "19090:9090"
       - "9545:8545"
       - "9546:8546"
+
+  hermes:
+    image: informalsystems/hermes:1.13.1
+    container_name: hermes
+    entrypoint: ["sleep"]
+    command: ["infinity"]
+    volumes:
+      - ./relayer/hermes:/home/hermes/.hermes
+    depends_on:
+      - xrplevm-a
+      - xrplevm-b
+
+volumes:
+  xrplevm-a-data:
+  xrplevm-b-data:

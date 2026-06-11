@@ -1,8 +1,8 @@
 import requests
 from decimal import Decimal
 
-COSMOS_REST_URL = "http://localhost:1317"  # Chain A
-# COSMOS_REST_URL = "http://localhost:2317"  # Chain B
+# COSMOS_REST_URL = "http://localhost:1317"  # Chain A
+COSMOS_REST_URL = "http://localhost:2317"  # Chain B
 
 ADDRESS = "ethm1dakgyqjulg29m5fmv992g2y66m9g2mjn6hahwg"
 

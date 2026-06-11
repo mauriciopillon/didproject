@@ -1,10 +1,10 @@
 import requests
 from decimal import Decimal
 
-# RPC_URL = "http://localhost:8545"  # Chain A
-RPC_URL = "http://localhost:9545"  # Chain B
+RPC_URL = "http://localhost:8545"  # Chain A
+# RPC_URL = "http://localhost:9545"  # Chain B
 
-ADDRESS = "0x6f6c82025cfa145dd13b614aa4289ad6ca856e53"
+ADDRESS = "0xd01D6027860c2E2e37295d3dE4B5a5f46F68d52f"
 
 payload = {
     "jsonrpc": "2.0",
