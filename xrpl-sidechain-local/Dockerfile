@@ -34,7 +34,7 @@ sed -i '\''s#address = "localhost:9090"#address = "0.0.0.0:9090"#g'\'' "$APP_TOM
 COPY scripts/start-persistent-a.sh /usr/local/bin/start-persistent-a.sh
 COPY scripts/start-persistent-b.sh /usr/local/bin/start-persistent-b.sh
 
-RUN chmod +x /usr/local/bin/start-persistent-a.sh \
-    /usr/local/bin/start-persistent-b.sh
+RUN sed -i 's/\r$//' /usr/local/bin/start-persistent-a.sh /usr/local/bin/start-persistent-b.sh && \
+    chmod +x /usr/local/bin/start-persistent-a.sh /usr/local/bin/start-persistent-b.sh
 
 EXPOSE 26656 26657 1317 9090 8545 8546
