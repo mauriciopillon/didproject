@@ -38,54 +38,44 @@ Health Check: `docker exec -it hermes hermes health-check`.
 Para validar o arquivo de configuração: `docker exec -it hermes hermes config validate`.
 
 ### Importação dos mnemonics para o Hermes:
-#### Chain A:
-```
-docker exec -it hermes sh -lc 'hermes keys add \
-  --chain xrplevm_1449999-1 \
-  --mnemonic-file /home/hermes/.hermes/mnemonics/relayer-a.txt \
-  --key-name relayer-a \
-  --hd-path "m/44'\''/60'\''/0'\''/0/0" \
-  --overwrite'
-```
-e, para validar a importação: `docker exec -it hermes hermes keys list --chain xrplevm_1449999-1`
-#### Chain B:
-```
-docker exec -it hermes sh -lc 'hermes keys add \
-  --chain xrplevm_1450000-1 \
-  --mnemonic-file /home/hermes/.hermes/mnemonics/relayer-b.txt \
-  --key-name relayer-b \
-  --hd-path "m/44'\''/60'\''/0'\''/0/0" \
-  --overwrite'
-```
-e, para validar a importação: `docker exec -it hermes hermes keys list --chain xrplevm_1450000-1`
 
-### Adicionando fundos às contas do relayer:
-#### Chain A:
 ```
-python scripts/fund_relayer_account_a.py
-```
-#### Chain B:
-```
-python scripts/fund_relayer_account_b.py
+python scripts/import_relayer_keys.py
 ```
 
-### Criação do canal IBC transfer:
+e, para validar a importação: `docker exec -it hermes hermes keys list --chain {CHAIN_ID}`. Por exemplo: `docker exec -it hermes hermes keys list --chain xrplevm_1450001-1`
+
+
+### Adicionando fundos às contas dos relayers:
+
+```
+python scripts/fund_relayers.py
+```
+
+
+### Criação do canal IBC transfer entre duas chains:
+Para haver comunicação entre duas chains X e Y, um canal IBC deve ser explicitamente aberto. Entre as chains A e B:
 ```
 docker exec -it hermes sh -lc 'hermes create channel \
-  --a-chain xrplevm_1449999-1 \
-  --b-chain xrplevm_1450000-1 \
+  --a-chain xrplevm_1450001-1 \
+  --b-chain xrplevm_1450002-1 \
   --a-port transfer \
   --b-port transfer \
   --new-client-connection \
-  --yes && hermes start'
+  --yes
+```
+Um segundo canal, entre as chains A e C:
+```
+docker exec -it hermes hermes create channel \
+  --a-chain xrplevm_1450001-1 \
+  --b-chain xrplevm_1450003-1 \
+  --a-port transfer \
+  --b-port transfer \
+  --new-client-connection
+  --yes
 ```
 
-#### Para validar a abertura do canal, execute `docker exec -it hermes hermes query channels --chain xrplevm_1449999-1` para a Chain A, e ` docker exec -it hermes hermes query channels --chain xrplevm_1450000-1` para a Chain B.
-
-### Execução do Relayer Hermes
-```
-docker exec -it hermes hermes start
-```
+#### Para validar ou verificar os canais abertos para uma chain, execute `docker exec -it hermes hermes query channels --chain {CHAIN_ID}`. Para a Chain A, por exmeplo: ` docker exec -it hermes hermes query channels --chain xrplevm_1450001-1`.
 
 A saída mostrará algo como:
 ```
@@ -99,6 +89,14 @@ PortChannelId {
     },
 ```
 Ou seja, o ` channel-0` será o utilizado 
+
+### Execução do Relayer Hermes
+Em um segundo terminal, execute:
+
+```
+docker exec -it hermes hermes start
+```
+
 
 ### Transferência Cross-Chain:
 Executa uma transferência de token (asset transfer) via protocolo IBC usando padrão ICS-20, da Chain A para Chain B.

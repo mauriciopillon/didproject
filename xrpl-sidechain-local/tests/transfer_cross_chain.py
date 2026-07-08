@@ -2,43 +2,48 @@ import json
 import time
 from decimal import Decimal
 from eth_utils import keccak
-
+from utils.chain_info import*
 from utils.make import *
 from utils.broadcast import *
 from utils.converter import *
 
-
-CHAIN_ID = "xrplevm_1449999-1"
-
-COSMOS_API_URL = "http://localhost:1317"
-COSMOS_RPC_URL = "http://localhost:26657"
-
-USER_EVM_PRIVATE_KEY = "D8161FD5FDF4EB216A6556DC639A2543B0ED9ABDBCEB9971FE08CFBA56F588C8"
-
-ALICE_CHAIN_B_COSMOS_ADDRESS = "ethm1dakgyqjulg29m5fmv992g2y66m9g2mjn6hahwg"
-
+### Source
+SOURCE_CHAIN = "Chain A"
+SOURCE_COSMOS_ADDRESS = "ethm1dakgyqjulg29m5fmv992g2y66m9g2mjn6hahwg"
+SOURCE_EVM_PRIVATE_KEY = "D8161FD5FDF4EB216A6556DC639A2543B0ED9ABDBCEB9971FE08CFBA56F588C8"
+SOURCE_CHANNEL = "channel-1"
 SOURCE_PORT = "transfer"
-SOURCE_CHANNEL = "channel-2"
 
+
+### Destination
+DESTINATION_CHAIN = "Chain C"
+DESTINATION_COSMOS_ADDRESS = "ethm1dakgyqjulg29m5fmv992g2y66m9g2mjn6hahwg"
+
+
+### Transfer data
 DENOM = "axrp"
 TRANSFER_AMOUNT = "1"  # em XRP
-
 FEE_AMOUNT = "20000000000000000"
 GAS_LIMIT = 400000
-
 TIMEOUT_SECONDS = 1000
-
 IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"
 ETH_PUBKEY_TYPE_URL = "/ethermint.crypto.v1.ethsecp256k1.PubKey"
 
 
-def transfer_cross_chain():
-    private_key = get_private_key(USER_EVM_PRIVATE_KEY.replace("0x", ""))
+def transfer_cross_chain(
+    source_chain,
+    destination_chain,
+    source_cosmos_address,
+    destination_cosmos_address,
+):
+    source_chain_data = find_chain(source_chain)
+    destination_chain_data = find_chain(destination_chain)
 
-    alice_chain_a_cosmos_address = get_user_cosmos_address(private_key)
+    private_key = get_private_key(SOURCE_EVM_PRIVATE_KEY.replace("0x", ""))
+
     pubkey_compressed = get_compressed_pubkey(private_key)
 
-    account_number, sequence = get_account_info(alice_chain_a_cosmos_address)
+    account_number, sequence = get_account_info(source_cosmos_address, source_chain)
 
     amount_axrp = str(int(Decimal(str(TRANSFER_AMOUNT)) * Decimal(10**18)))
     timeout_timestamp = int((time.time() + TIMEOUT_SECONDS) * 1_000_000_000)
@@ -46,8 +51,8 @@ def transfer_cross_chain():
     msg_transfer = make_msg_transfer(
         source_port=SOURCE_PORT,
         source_channel=SOURCE_CHANNEL,
-        sender=alice_chain_a_cosmos_address,
-        receiver=ALICE_CHAIN_B_COSMOS_ADDRESS,
+        sender=source_cosmos_address,
+        receiver=destination_cosmos_address,
         amount=amount_axrp,
         denom=DENOM,
         timeout_timestamp=timeout_timestamp,
@@ -73,7 +78,7 @@ def transfer_cross_chain():
     sign_doc = make_sign_doc(
         body_bytes=tx_body,
         auth_info_bytes=auth_info,
-        chain_id=CHAIN_ID,
+        chain_id=source_chain_data["chain_id"],
         account_number=account_number,
     )
 
@@ -86,14 +91,17 @@ def transfer_cross_chain():
         signature=signature,
     )
 
-    response = broadcast_tx(tx_raw)
+    response = broadcast_tx(tx_raw, source_chain)
 
     output = {
-        "Source Chain": CHAIN_ID,
+        "Source Chain": source_chain,
+        "Source Chain ID": source_chain_data["chain_id"],
+        "Destination Chain": destination_chain,
+        "Destination Chain ID": destination_chain_data["chain_id"],
         "Source Port": SOURCE_PORT,
         "Source Channel": SOURCE_CHANNEL,
-        "Sender Chain A": alice_chain_a_cosmos_address,
-        "Receiver Chain B": ALICE_CHAIN_B_COSMOS_ADDRESS,
+        "Sender": source_cosmos_address,
+        "Receiver": destination_cosmos_address,
         "Amount": str(TRANSFER_AMOUNT) + " XRP",
         "Amount axrp": amount_axrp,
         "Code": response["result"]["code"],
@@ -107,4 +115,9 @@ def transfer_cross_chain():
     print(json.dumps(output, indent=2, ensure_ascii=False))
 
 
-transfer_cross_chain()
+transfer_cross_chain(
+    source_chain=SOURCE_CHAIN,
+    destination_chain=DESTINATION_CHAIN,
+    source_cosmos_address=SOURCE_COSMOS_ADDRESS,
+    destination_cosmos_address=DESTINATION_COSMOS_ADDRESS,
+)

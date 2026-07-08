@@ -1,15 +1,16 @@
 import os
 import requests
+from utils.chain_info import find_chain
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-COSMOS_API_URL = ("http://localhost:1317").rstrip("/")
-COSMOS_RPC_URL = ("http://localhost:26657").rstrip("/")
 
+def get_account_info(address, chain_name):
+    chain = find_chain(chain_name)
+    port = chain["rest_port"]
 
-def get_account_info(address):
-    url = f"{COSMOS_API_URL}/cosmos/auth/v1beta1/accounts/{address}"
+    url = f"http://localhost:{port}/cosmos/auth/v1beta1/accounts/{address}"
 
     response = requests.get(url)
     data = response.json()
@@ -25,10 +26,12 @@ def get_account_info(address):
     return account_number, sequence
 
 
-def broadcast_tx(tx_raw_bytes):
+def broadcast_tx(tx_raw_bytes, chain_name):
+    chain = find_chain(chain_name)
+    port = chain["rpc_port"]
     tx_hex = "0x" + tx_raw_bytes.hex()
 
-    url = f"{COSMOS_RPC_URL}/broadcast_tx_sync"
+    url = f"http://localhost:{port}/broadcast_tx_sync"
 
     response = requests.get(
         url,
