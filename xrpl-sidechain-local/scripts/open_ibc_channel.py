@@ -1,8 +1,8 @@
 from pathlib import Path
+import argparse
 import json
 import subprocess
-import sys
-import urllib.request
+import time
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -25,17 +25,41 @@ def save_chains_data(data):
 
 def find_chain(chains, label):
     for chain in chains:
-        if chain["label"] == label or chain["name"] == label or chain["chain_id"] == label:
+        if (
+            chain["label"] == label
+            or chain["name"] == label
+            or chain["chain_id"] == label
+            or chain["service"] == label
+        ):
             return chain
 
     raise ValueError(f"Chain não encontrada: {label}")
 
 
-def get_channels(chain):
-    url = f"http://localhost:{chain['rest_port']}/ibc/core/channel/v1/channels"
+def run(cmd):
+    return subprocess.run(cmd, check=True, text=True, capture_output=True)
 
-    with urllib.request.urlopen(url) as response:
-        data = json.loads(response.read().decode("utf-8"))
+
+def get_channels(chain):
+    node = f"tcp://{chain['ip']}:{chain['rpc_port']}"
+
+    cmd = [
+        "docker",
+        "exec",
+        chain["service"],
+        "/app/bin/exrpd",
+        "query",
+        "ibc",
+        "channel",
+        "channels",
+        "--node",
+        node,
+        "--output",
+        "json",
+    ]
+
+    result = run(cmd)
+    data = json.loads(result.stdout)
 
     channels = {}
 
@@ -48,12 +72,20 @@ def get_channels(chain):
 
 def create_channel(source_chain, destination_chain):
     cmd = [
-        "docker", "exec", HERMES_CONTAINER,
-        "hermes", "create", "channel",
-        "--a-chain", source_chain["chain_id"],
-        "--b-chain", destination_chain["chain_id"],
-        "--a-port", PORT_ID,
-        "--b-port", PORT_ID,
+        "docker",
+        "exec",
+        HERMES_CONTAINER,
+        "hermes",
+        "create",
+        "channel",
+        "--a-chain",
+        source_chain["chain_id"],
+        "--b-chain",
+        destination_chain["chain_id"],
+        "--a-port",
+        PORT_ID,
+        "--b-port",
+        PORT_ID,
         "--new-client-connection",
         "--yes",
     ]
@@ -73,6 +105,19 @@ def get_new_channel(before, after):
     return new_ids[0]
 
 
+def wait_for_new_channel(chain, before):
+    for _ in range(20):
+        after = get_channels(chain)
+        new_ids = set(after.keys()) - set(before.keys())
+
+        if new_ids:
+            return after
+
+        time.sleep(1)
+
+    return get_channels(chain)
+
+
 def open_ibc_channel(source_label, destination_label):
     data = load_chains_data()
     chains = data["chains"]
@@ -85,8 +130,8 @@ def open_ibc_channel(source_label, destination_label):
 
     create_channel(source_chain, destination_chain)
 
-    source_after = get_channels(source_chain)
-    destination_after = get_channels(destination_chain)
+    source_after = wait_for_new_channel(source_chain, source_before)
+    destination_after = wait_for_new_channel(destination_chain, destination_before)
 
     source_channel_id = get_new_channel(source_before, source_after)
     destination_channel_id = get_new_channel(destination_before, destination_after)
@@ -104,5 +149,23 @@ def open_ibc_channel(source_label, destination_label):
     print(f"Atualizado: {CHAINS_FILE}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("chains", nargs="*")
+    parser.add_argument("--chain-a", dest="chain_a")
+    parser.add_argument("--chain-b", dest="chain_b")
+
+    args = parser.parse_args()
+
+    if args.chain_a and args.chain_b:
+        return args.chain_a, args.chain_b
+
+    if len(args.chains) == 2:
+        return args.chains[0], args.chains[1]
+
+    parser.error("use: open_ibc_channel.py a b ou open_ibc_channel.py --chain-a a --chain-b b")
+
+
 if __name__ == "__main__":
-    open_ibc_channel(sys.argv[1], sys.argv[2])
+    chain_a, chain_b = parse_args()
+    open_ibc_channel(chain_a, chain_b)

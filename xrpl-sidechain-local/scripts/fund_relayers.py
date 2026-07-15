@@ -1,19 +1,22 @@
 from pathlib import Path
 from decimal import Decimal
 import json
-import os
+import subprocess
+import time
 
-from dotenv import load_dotenv
+from bech32 import bech32_encode, convertbits
 from eth_account import Account
-from web3 import Web3
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 CHAINS_FILE = ROOT_DIR / "chains.json"
-ENV_FILE = ROOT_DIR / ".env"
 
 FUND_AMOUNT_XRP = Decimal("100")
+DENOM = "axrp"
 DERIVATION_PATH = "m/44'/60'/0'/0/0"
+BECH32_PREFIX = "ethm"
+FEE = "20000000000000000axrp"
+GAS = "200000"
 
 
 def load_chains():
@@ -21,8 +24,14 @@ def load_chains():
     return data["chains"]
 
 
-def xrp_to_wei(amount):
+def xrp_to_axrp(amount):
     return int(amount * Decimal(10**18))
+
+
+def eth_hex_to_ethm(address):
+    raw = bytes.fromhex(address.removeprefix("0x"))
+    data = convertbits(raw, 8, 5)
+    return bech32_encode(BECH32_PREFIX, data)
 
 
 def relayer_address_from_mnemonic(mnemonic):
@@ -33,43 +42,76 @@ def relayer_address_from_mnemonic(mnemonic):
         account_path=DERIVATION_PATH,
     )
 
-    return Web3.to_checksum_address(account.address)
+    return eth_hex_to_ethm(account.address)
+
+
+def run(cmd):
+    return subprocess.run(cmd, check=True, text=True, capture_output=True)
 
 
 def fund_relayer(chain):
-    rpc_url = f"http://localhost:{chain['evm_rpc_port']}"
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
-
-    alice_address = Web3.to_checksum_address(os.environ["ALICE_EVM_ADDRESS"])
-    alice_private_key = os.environ["ALICE_PRIVATE_KEY"]
-
     relayer_address = relayer_address_from_mnemonic(chain["relayer_mnemonic"])
-    value = xrp_to_wei(FUND_AMOUNT_XRP)
+    amount = f"{xrp_to_axrp(FUND_AMOUNT_XRP)}{DENOM}"
+    node = f"tcp://{chain['ip']}:{chain['rpc_port']}"
 
-    tx = {
-        "from": alice_address,
-        "to": relayer_address,
-        "value": value,
-        "nonce": w3.eth.get_transaction_count(alice_address, "pending"),
-        "gas": 21000,
-        "gasPrice": w3.eth.gas_price,
-        "chainId": w3.eth.chain_id,
-    }
+    print(f"{chain['label']}: funding {relayer_address} com {amount}")
 
-    signed = w3.eth.account.sign_transaction(tx, alice_private_key)
-    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    cmd = [
+        "docker",
+        "exec",
+        chain["service"],
+        "/app/bin/exrpd",
+        "tx",
+        "bank",
+        "send",
+        "alice",
+        relayer_address,
+        amount,
+        "--home",
+        "/app/.exrpd",
+        "--chain-id",
+        chain["chain_id"],
+        "--keyring-backend",
+        "test",
+        "--node",
+        node,
+        "--gas",
+        GAS,
+        "--fees",
+        FEE,
+        "-y",
+    ]
 
-    print(f"{chain['label']}: enviando 100 XRP para {relayer_address}")
-    print(f"{chain['label']}: tx {tx_hash.hex()}")
+    result = run(cmd)
 
-    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if result.stdout.strip():
+        print(result.stdout.strip())
 
-    print(f"{chain['label']}: confirmado no bloco {receipt.blockNumber}")
+    if result.stderr.strip():
+        print(result.stderr.strip())
+
+    time.sleep(3)
+
+    query_cmd = [
+        "docker",
+        "exec",
+        chain["service"],
+        "/app/bin/exrpd",
+        "query",
+        "bank",
+        "balances",
+        relayer_address,
+        "--node",
+        node,
+    ]
+
+    balance = run(query_cmd)
+
+    print(f"{chain['label']}: saldo de {relayer_address}")
+    print(balance.stdout.strip())
 
 
 def main():
-    load_dotenv(ENV_FILE)
-
     for chain in load_chains():
         fund_relayer(chain)
 

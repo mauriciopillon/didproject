@@ -1,0 +1,8 @@
+docker exec xrplevm-a /app/bin/exrpd tx bank send alice ethm16qwkqfuxpshzudeft577fdd973hk34f0nlk6ss 100000000000000000000axrp \
+  --home /app/.exrpd \
+  --chain-id xrplevm_1450001-1 \
+  --keyring-backend test \
+  --node tcp://10.10.20.201:8011 \
+  --gas 200000 \
+  --fees 20000000000000000axrp \
+  -y
